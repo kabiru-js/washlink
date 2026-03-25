@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("CUSTOMER")
+  phone        String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vendorProfileVendor VendorProfile?
+  riderProfile        RiderProfile?
+
+  customerRequests LaundryRequest[] @relation("CustomerRequests")
+  vendorRequests   LaundryRequest[] @relation("VendorRequests")
+
+  offers   VendorOffer[]
+  messagesSent Message[] @relation("SentMessages")
+}
+
+model VendorProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  businessName String
+  services     String
+  basePrice    Float
+  locationLat  Float
+  locationLng  Float
+  radiusKm     Float
+  isActive     Boolean  @default(true)
+  rating       Float    @default(0.0)
+}
+
+model LaundryRequest {
+  id                String        @id @default(uuid())
+  customerId        String
+  customer          User          @relation("CustomerRequests", fields: [customerId], references: [id])
+  status            String        @default("PENDING")
+  description       String
+  bagCount          Int
+  notes             String?
+  images            String
+  pickupLat         Float
+  pickupLng         Float
+  pickupAddress     String
+  initialPriceOffer Float?
+  finalPrice        Float?
+  selectedVendorId  String?
+  selectedVendor    User?         @relation("VendorRequests", fields: [selectedVendorId], references: [id])
+  assignedRiderId   String?
+  assignedRider     RiderProfile? @relation("RiderAssignments", fields: [assignedRiderId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  offers   VendorOffer[]
+  messages Message[]
+}
+
+model VendorOffer {
+  id            String      @id @default(uuid())
+  requestId     String
+  request       LaundryRequest @relation(fields: [requestId], references: [id])
+  vendorId      String
+  vendor        User        @relation(fields: [vendorId], references: [id])
+  proposedPrice Float
+  etaHours      Float
+  status        String      @default("PENDING")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  requestId String
+  request   LaundryRequest @relation(fields: [requestId], references: [id])
+  senderId  String
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model RiderProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  name         String
+  phone        String?
+  vehicleType  String?
+  isActive     Boolean  @default(true)
+  rating       Float    @default(0.0)
+
+  assignedRequests LaundryRequest[] @relation("RiderAssignments")
+}
