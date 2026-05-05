@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -26,22 +24,22 @@ model User {
   customerRequests LaundryRequest[] @relation("CustomerRequests")
   vendorRequests   LaundryRequest[] @relation("VendorRequests")
 
-  offers   VendorOffer[]
-  messagesSent Message[] @relation("SentMessages")
+  offers       VendorOffer[]
+  messagesSent Message[]     @relation("SentMessages")
 }
 
 model VendorProfile {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id])
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id])
   businessName String
   services     String
   basePrice    Float
   locationLat  Float
   locationLng  Float
   radiusKm     Float
-  isActive     Boolean  @default(true)
-  rating       Float    @default(0.0)
+  isActive     Boolean @default(true)
+  rating       Float   @default(0.0)
 }
 
 model LaundryRequest {
@@ -70,37 +68,37 @@ model LaundryRequest {
 }
 
 model VendorOffer {
-  id            String      @id @default(uuid())
+  id            String         @id @default(uuid())
   requestId     String
   request       LaundryRequest @relation(fields: [requestId], references: [id])
   vendorId      String
-  vendor        User        @relation(fields: [vendorId], references: [id])
+  vendor        User           @relation(fields: [vendorId], references: [id])
   proposedPrice Float
   etaHours      Float
-  status        String      @default("PENDING")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  status        String         @default("PENDING")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Message {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   requestId String
   request   LaundryRequest @relation(fields: [requestId], references: [id])
   senderId  String
-  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  sender    User           @relation("SentMessages", fields: [senderId], references: [id])
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
 }
 
 model RiderProfile {
-  id           String   @id @default(uuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id])
-  name         String
-  phone        String?
-  vehicleType  String?
-  isActive     Boolean  @default(true)
-  rating       Float    @default(0.0)
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id])
+  name        String
+  phone       String?
+  vehicleType String?
+  isActive    Boolean @default(true)
+  rating      Float   @default(0.0)
 
   assignedRequests LaundryRequest[] @relation("RiderAssignments")
 }
