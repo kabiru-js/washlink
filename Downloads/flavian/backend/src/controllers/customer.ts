@@ -79,56 +79,9 @@ export const getMyRequests = async (req: AuthRequest, res: Response) => {
 };
 
 export const acceptOffer = async (req: AuthRequest, res: Response) => {
-    try {
-        const userId = req.user!.userId;
-        const { offerId } = req.params;
-
-        const offer = await prisma.vendorOffer.findUnique({
-            where: { id: offerId },
-            include: { request: true },
-        });
-
-        if (!offer || offer.request.customerId !== userId) {
-            return res.status(404).json({ error: 'Offer not found or unauthorized' });
-        }
-
-        if (offer.request.status !== 'PENDING') {
-            return res.status(400).json({ error: 'Request is no longer pending' });
-        }
-
-        // Accept this offer, reject all others, update request status in a transaction
-        await prisma.$transaction(async (tx: any) => {
-            // 1. Update the accepted offer
-            await tx.vendorOffer.update({
-                where: { id: offerId },
-                data: { status: 'ACCEPTED' },
-            });
-
-            // 2. Reject all other offers for this request
-            await tx.vendorOffer.updateMany({
-                where: {
-                    requestId: offer.requestId,
-                    id: { not: offerId },
-                },
-                data: { status: 'REJECTED' },
-            });
-
-            // 3. Update request status to ACCEPTED and set chosen vendor/price
-            await tx.laundryRequest.update({
-                where: { id: offer.requestId },
-                data: {
-                    status: 'ACCEPTED',
-                    selectedVendorId: offer.vendorId,
-                    finalPrice: offer.proposedPrice
-                },
-            });
-        });
-
-        res.json({ message: 'Offer accepted successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+    return res.status(400).json({
+        error: 'Vendor selection is handled by admin dispatch',
+    });
 };
 
 export const rejectOffer = async (req: AuthRequest, res: Response) => {
@@ -151,6 +104,38 @@ export const rejectOffer = async (req: AuthRequest, res: Response) => {
         });
 
         res.json({ message: 'Offer rejected successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const submitPayment = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user!.userId;
+        const requestId = req.params.id;
+        const { paymentMethod, paymentReference, paymentProofUrl } = req.body;
+
+        const request = await prisma.laundryRequest.findUnique({ where: { id: requestId } });
+        if (!request) return res.status(404).json({ error: 'Request not found' });
+        if (request.customerId !== userId) return res.status(403).json({ error: 'Unauthorized' });
+
+        if (!paymentMethod) {
+            return res.status(400).json({ error: 'paymentMethod is required' });
+        }
+
+        const updated = await prisma.laundryRequest.update({
+            where: { id: requestId },
+            data: {
+                paymentMethod,
+                paymentReference: paymentReference || null,
+                paymentProofUrl: paymentProofUrl || null,
+                paymentStatus: 'SUBMITTED',
+                paymentSubmittedAt: new Date(),
+            },
+        });
+
+        res.json(updated);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });

@@ -6,11 +6,11 @@ import {
   Typography,
   Button,
   Card,
-  CardContent,
   CircularProgress,
   Grid,
-  Divider,
   Chip,
+  TextField,
+  MenuItem,
 } from '@mui/material';
 import api from '@/lib/axios';
 import { useSocket } from '@/context/SocketContext';
@@ -29,6 +29,10 @@ export default function RequestDetailsPage({
     name: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('PALMPAY');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentProofUrl, setPaymentProofUrl] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
   const { socket } = useSocket();
   const { showToast } = useSnackbar();
 
@@ -81,19 +85,6 @@ export default function RequestDetailsPage({
     }
   };
 
-  const acceptOffer = async (offerId: string) => {
-    try {
-      await api.post(`/customer/offers/${offerId}/accept`);
-      showToast(
-        'Offer accepted. Admin support chat is now available.',
-        'success',
-      );
-      fetchRequest();
-    } catch (err) {
-      showToast('Failed to accept offer', 'error');
-    }
-  };
-
   const cancelRequest = async () => {
     if (!window.confirm('Are you sure you want to cancel this request?'))
       return;
@@ -103,6 +94,23 @@ export default function RequestDetailsPage({
       fetchRequest();
     } catch (err) {
       showToast('Failed to cancel order', 'error');
+    }
+  };
+
+  const submitPayment = async () => {
+    try {
+      setSubmittingPayment(true);
+      await api.post(`/customer/requests/${params.id}/payment`, {
+        paymentMethod,
+        paymentReference,
+        paymentProofUrl,
+      });
+      showToast('Payment submitted. Waiting for admin confirmation.', 'success');
+      fetchRequest();
+    } catch (err) {
+      showToast('Failed to submit payment details', 'error');
+    } finally {
+      setSubmittingPayment(false);
     }
   };
 
@@ -174,7 +182,64 @@ export default function RequestDetailsPage({
                 Agreed Price: ${request.finalPrice}
               </Typography>
             )}
+
+            <Typography variant='body2' color='text.secondary' mt={1.5}>
+              Payment Status: {request.paymentStatus || 'UNPAID'}
+            </Typography>
           </Card>
+
+          {request.status === 'PENDING' && request.paymentStatus !== 'CONFIRMED' && (
+            <Card sx={{ p: 3, mb: 3, borderRadius: 0 }}>
+              <Typography variant='h6' fontWeight='bold' mb={1}>
+                Submit Transfer Payment
+              </Typography>
+              <Typography variant='body2' color='text.secondary' mb={2}>
+                Pay using PalmPay or OPay, then submit your reference for admin confirmation.
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label='Payment Method'
+                    value={paymentMethod}
+                    onChange={e => setPaymentMethod(e.target.value)}
+                    size='small'
+                  >
+                    <MenuItem value='PALMPAY'>PalmPay</MenuItem>
+                    <MenuItem value='OPAY'>OPay</MenuItem>
+                    <MenuItem value='BANK_TRANSFER'>Bank Transfer</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label='Payment Reference'
+                    value={paymentReference}
+                    onChange={e => setPaymentReference(e.target.value)}
+                    size='small'
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label='Proof URL (optional)'
+                    value={paymentProofUrl}
+                    onChange={e => setPaymentProofUrl(e.target.value)}
+                    size='small'
+                  />
+                </Grid>
+              </Grid>
+              <Button
+                sx={{ mt: 2, borderRadius: 0 }}
+                variant='contained'
+                onClick={submitPayment}
+                disabled={submittingPayment}
+              >
+                Submit Payment Details
+              </Button>
+            </Card>
+          )}
 
           {request.status === 'PENDING' && (
             <Box>
@@ -214,15 +279,9 @@ export default function RequestDetailsPage({
                         ${offer.proposedPrice}
                       </Typography>
                       {offer.status === 'PENDING' && (
-                        <Button
-                          variant='contained'
-                          color='success'
-                          size='small'
-                          sx={{ mt: 1, borderRadius: 0 }}
-                          onClick={() => acceptOffer(offer.id)}
-                        >
-                          Accept
-                        </Button>
+                        <Typography variant='caption' color='text.secondary'>
+                          Awaiting admin assignment decision
+                        </Typography>
                       )}
                     </Box>
                   </Box>

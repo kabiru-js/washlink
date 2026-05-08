@@ -72,6 +72,9 @@ export const register = async (req: Request, res: Response) => {
           name: name,
           phone: phone || null,
           vehicleType: req.body.vehicleType || null,
+          locationLat: req.body.lat || 0.0,
+          locationLng: req.body.lng || 0.0,
+          radiusKm: req.body.radius || 10.0,
         },
       });
     }

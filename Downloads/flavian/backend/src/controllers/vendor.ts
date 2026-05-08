@@ -29,12 +29,19 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
 export const getNearbyRequests = async (req: AuthRequest, res: Response) => {
     try {
-        // For MVP, we will just return all PENDING requests.
-        // A proper implementation would filter by vendor location and radius using Haversine formula or PostGIS.
+        const userId = req.user!.userId;
+
         const requests = await prisma.laundryRequest.findMany({
-            where: { status: 'PENDING' },
+            where: {
+                selectedVendorId: userId,
+                paymentStatus: 'CONFIRMED',
+                status: {
+                    in: ['ACCEPTED', 'PICKED_UP', 'RECEIVED', 'PROCESSING', 'READY'],
+                },
+            },
             include: {
                 customer: { select: { id: true, name: true, avatarUrl: true } },
+                assignedRider: { select: { id: true, name: true, phone: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -54,6 +61,10 @@ export const submitOffer = async (req: AuthRequest, res: Response) => {
         const request = await prisma.laundryRequest.findUnique({ where: { id: requestId } });
         if (!request || request.status !== 'PENDING') {
             return res.status(400).json({ error: 'Request not available for offers' });
+        }
+
+        if (request.paymentStatus !== 'CONFIRMED') {
+            return res.status(400).json({ error: 'Payment must be confirmed by admin before offers can be submitted' });
         }
 
         const offer = await prisma.vendorOffer.create({
@@ -99,6 +110,10 @@ export const autoAssignRider = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'Unauthorized.' });
         }
 
+        if (request.paymentStatus !== 'CONFIRMED') {
+            return res.status(400).json({ error: 'Payment must be confirmed before rider assignment' });
+        }
+
         const riders = await prisma.riderProfile.findMany({ where: { isActive: true }, take: 1 });
         if (riders.length === 0) {
             return res.status(404).json({ error: 'No riders available on the platform yet' });
@@ -106,7 +121,11 @@ export const autoAssignRider = async (req: AuthRequest, res: Response) => {
 
         const updated = await prisma.laundryRequest.update({
             where: { id: requestId },
-            data: { assignedRiderId: riders[0].id }
+            data: {
+                assignedRiderId: riders[0].id,
+                riderAssignmentStage: 'PICKUP',
+                pickupRiderAssignedAt: new Date(),
+            }
         });
 
         res.json({ message: 'Rider auto-assigned successfully', request: updated, rider: riders[0] });

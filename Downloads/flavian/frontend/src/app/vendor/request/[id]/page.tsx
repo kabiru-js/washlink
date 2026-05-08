@@ -152,11 +152,9 @@ export default function VendorRequestPage({
                   disabled={updating}
                   sx={{ borderRadius: 0, bgcolor: 'white' }}
                 >
-                  <MenuItem value='ACCEPTED'>Accepted</MenuItem>
-                  <MenuItem value='PICKED_UP'>Picked Up</MenuItem>
-                  <MenuItem value='WASHING'>Washing</MenuItem>
-                  <MenuItem value='DELIVERING'>Out for Delivery</MenuItem>
-                  <MenuItem value='COMPLETED'>Completed</MenuItem>
+                  <MenuItem value='RECEIVED'>Received</MenuItem>
+                  <MenuItem value='PROCESSING'>Processing</MenuItem>
+                  <MenuItem value='READY'>Ready</MenuItem>
                 </Select>
               </Card>
             )}

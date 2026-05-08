@@ -38,6 +38,23 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'Unauthorized to update this request' });
         }
 
+        if (request.paymentStatus !== 'CONFIRMED') {
+            return res.status(400).json({ error: 'Payment must be confirmed before rider status updates' });
+        }
+
+        if (request.riderAssignmentStage === 'PICKUP') {
+            if (status !== 'PICKED_UP') {
+                return res.status(400).json({ error: 'Pickup rider can only set status to PICKED_UP' });
+            }
+        }
+
+        if (request.riderAssignmentStage === 'DELIVERY') {
+            const allowedDelivery = new Set(['IN_TRANSIT', 'DELIVERING', 'COMPLETED']);
+            if (!allowedDelivery.has(status)) {
+                return res.status(400).json({ error: 'Delivery rider can only set IN_TRANSIT, DELIVERING or COMPLETED' });
+            }
+        }
+
         const updatedRequest = await prisma.laundryRequest.update({
             where: { id: requestId },
             data: { status },
@@ -53,13 +70,17 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user!.userId;
-        const { phone, vehicleType } = req.body;
+        const { phone, vehicleType, lat, lng, radius, isActive } = req.body;
 
         const profile = await prisma.riderProfile.update({
             where: { userId },
             data: {
                 ...(phone && { phone }),
-                ...(vehicleType && { vehicleType })
+                ...(vehicleType && { vehicleType }),
+                ...(lat !== undefined && { locationLat: lat }),
+                ...(lng !== undefined && { locationLng: lng }),
+                ...(radius !== undefined && { radiusKm: radius }),
+                ...(isActive !== undefined && { isActive }),
             }
         });
 

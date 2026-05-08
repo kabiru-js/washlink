@@ -3,6 +3,9 @@ import { AuthenticatedSocket } from './index';
 import { prisma } from '../utils/db';
 type RequestStatus = string;
 
+const vendorAllowedStatuses = new Set(['RECEIVED', 'PROCESSING', 'READY']);
+const deliveryAllowedStatuses = new Set(['IN_TRANSIT', 'DELIVERING', 'COMPLETED']);
+
 export const registerOrderHandlers = (io: Server, socket: AuthenticatedSocket) => {
     // Only vendors (or maybe customers cancelling) should update order status
     socket.on('update_order_status', async (data: { requestId: string; status: RequestStatus }) => {
@@ -15,10 +18,27 @@ export const registerOrderHandlers = (io: Server, socket: AuthenticatedSocket) =
                 return socket.emit('error', { message: 'Request not found' });
             }
 
+            if (request.paymentStatus !== 'CONFIRMED') {
+                return socket.emit('error', { message: 'Payment must be confirmed before status updates' });
+            }
+
             // Allow vendors who are matched or admins, etc.
             // Basic check: Ensure it's the matched vendor
             if (socket.user?.role === 'VENDOR' && request.selectedVendorId !== userId) {
                 return socket.emit('error', { message: 'Unauthorized. You are not the assigned vendor.' });
+            }
+
+            if (socket.user?.role === 'VENDOR' && !vendorAllowedStatuses.has(status)) {
+                return socket.emit('error', { message: 'Vendors can only update status to RECEIVED, PROCESSING or READY' });
+            }
+
+            if (socket.user?.role === 'RIDER') {
+                if (request.riderAssignmentStage === 'PICKUP' && status !== 'PICKED_UP') {
+                    return socket.emit('error', { message: 'Pickup rider can only set PICKED_UP' });
+                }
+                if (request.riderAssignmentStage === 'DELIVERY' && !deliveryAllowedStatuses.has(status)) {
+                    return socket.emit('error', { message: 'Delivery rider can only set IN_TRANSIT, DELIVERING or COMPLETED' });
+                }
             }
 
             // Update in DB

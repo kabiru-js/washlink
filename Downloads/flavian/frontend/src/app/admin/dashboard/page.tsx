@@ -53,8 +53,12 @@ const statusOptions = [
   'PENDING',
   'ACCEPTED',
   'PICKED_UP',
+  'RECEIVED',
+  'PROCESSING',
+  'READY',
   'WASHING',
   'DELIVERING',
+  'IN_TRANSIT',
   'COMPLETED',
   'CANCELLED',
 ];

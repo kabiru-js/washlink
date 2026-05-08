@@ -4,7 +4,9 @@ import { Stepper, Step, StepLabel, Box } from '@mui/material';
 const steps = [
   'Request Accepted',
   'Picked Up',
-  'Washing',
+    'Received by Vendor',
+    'Processing',
+    'Ready',
   'Out for Delivery',
   'Completed',
 ];
@@ -13,10 +15,13 @@ const statusToStep = {
     'PENDING': -1,
     'ACCEPTED': 0,
     'PICKED_UP': 1,
-    'WASHING': 2,
-    'DELIVERING': 3,
-    'IN_TRANSIT': 3,
-    'COMPLETED': 5,
+    'RECEIVED': 2,
+    'PROCESSING': 3,
+    'READY': 4,
+    'WASHING': 3,
+    'DELIVERING': 5,
+    'IN_TRANSIT': 5,
+    'COMPLETED': 6,
 };
 
 export default function ProgressTracker({ status }: { status: string }) {
