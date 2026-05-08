@@ -25,6 +25,7 @@ import {
   ListItemButton,
   ListItemText,
   Chip as MuiChip,
+  Alert,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useParams, useRouter } from 'next/navigation';
@@ -137,6 +138,7 @@ export default function AdminRequestDetailsPage() {
   const [request, setRequest] = useState<RequestDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingStatus, setSavingStatus] = useState(false);
+  const [statusError, setStatusError] = useState('');
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [assigningVendor, setAssigningVendor] = useState(false);
   const [assigningPickupRider, setAssigningPickupRider] = useState(false);
@@ -190,6 +192,7 @@ export default function AdminRequestDetailsPage() {
     if (!request) return;
 
     setSavingStatus(true);
+    setStatusError('');
     try {
       const res = await api.patch(`/admin/requests/${request.id}/status`, {
         status,
@@ -199,7 +202,9 @@ export default function AdminRequestDetailsPage() {
           ? { ...prev, status: res.data.status, updatedAt: res.data.updatedAt }
           : prev,
       );
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to update status';
+      setStatusError(errorMsg);
       console.error(error);
     } finally {
       setSavingStatus(false);
@@ -515,6 +520,12 @@ export default function AdminRequestDetailsPage() {
                 Order Progress
               </Typography>
               <ProgressTracker status={request.status} />
+
+              {statusError && (
+                <Alert severity='error' sx={{ mt: 2, mb: 2 }} onClose={() => setStatusError('')}>
+                  {statusError}
+                </Alert>
+              )}
 
               <FormControl fullWidth size='small' sx={{ mt: 2 }}>
                 <InputLabel id='admin-request-status'>Update Status</InputLabel>
