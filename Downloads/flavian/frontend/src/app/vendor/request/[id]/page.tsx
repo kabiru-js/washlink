@@ -54,12 +54,11 @@ export default function VendorRequestPage({
 
   const fetchRequest = async () => {
     try {
-      // In MVP, a vendor checks their offers to find the request details.
-      // We will make a generic API GET call /vendor/offers if it includes the request.
-      const res = await api.get('/vendor/offers');
-      const offer = res.data.find((o: any) => o.requestId === params.id);
-      if (offer && offer.request) {
-        setRequest(offer.request);
+      // Fetch all assigned requests and find this one
+      const res = await api.get('/vendor/requests/nearby');
+      const assignedRequest = res.data.find((r: any) => r.id === params.id);
+      if (assignedRequest) {
+        setRequest(assignedRequest);
       }
     } catch (err) {
       console.error(err);
