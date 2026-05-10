@@ -158,6 +158,7 @@ export default function AdminRequestDetailsPage() {
   const [assigningManualVendor, setAssigningManualVendor] = useState(false);
   const [assigningManualPickupRider, setAssigningManualPickupRider] = useState(false);
   const [assigningManualDeliveryRider, setAssigningManualDeliveryRider] = useState(false);
+  const [assignmentError, setAssignmentError] = useState('');
 
   const noteStorageKey = useMemo(() => `admin_note_${id}`, [id]);
 
@@ -296,13 +297,16 @@ export default function AdminRequestDetailsPage() {
   const assignManualVendor = async (vendorUserId: string) => {
     if (!request) return;
     setAssigningManualVendor(true);
+    setAssignmentError('');
     try {
       await api.post(`/admin/requests/${request.id}/assign-vendor-manual`, {
         vendorUserId,
       });
       await loadRequest();
       setVendorDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to assign vendor';
+      setAssignmentError(errorMsg);
       console.error(error);
     } finally {
       setAssigningManualVendor(false);
@@ -327,13 +331,16 @@ export default function AdminRequestDetailsPage() {
   const assignManualPickupRider = async (riderUserId: string) => {
     if (!request) return;
     setAssigningManualPickupRider(true);
+    setAssignmentError('');
     try {
       await api.post(`/admin/requests/${request.id}/assign-rider-pickup-manual`, {
         riderUserId,
       });
       await loadRequest();
       setPickupRiderDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to assign pickup rider';
+      setAssignmentError(errorMsg);
       console.error(error);
     } finally {
       setAssigningManualPickupRider(false);
@@ -358,13 +365,16 @@ export default function AdminRequestDetailsPage() {
   const assignManualDeliveryRider = async (riderUserId: string) => {
     if (!request) return;
     setAssigningManualDeliveryRider(true);
+    setAssignmentError('');
     try {
       await api.post(`/admin/requests/${request.id}/assign-rider-delivery-manual`, {
         riderUserId,
       });
       await loadRequest();
       setDeliveryRiderDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Failed to assign delivery rider';
+      setAssignmentError(errorMsg);
       console.error(error);
     } finally {
       setAssigningManualDeliveryRider(false);
@@ -724,6 +734,11 @@ export default function AdminRequestDetailsPage() {
       <Dialog open={vendorDialogOpen} onClose={() => setVendorDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>Select Vendor Manually</DialogTitle>
         <DialogContent>
+          {assignmentError && (
+            <Alert severity='error' sx={{ mb: 2 }} onClose={() => setAssignmentError('')}>
+              {assignmentError}
+            </Alert>
+          )}
           {loadingVendors ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={40} />
@@ -756,6 +771,11 @@ export default function AdminRequestDetailsPage() {
       <Dialog open={pickupRiderDialogOpen} onClose={() => setPickupRiderDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>Select Pickup Rider</DialogTitle>
         <DialogContent>
+          {assignmentError && (
+            <Alert severity='error' sx={{ mb: 2 }} onClose={() => setAssignmentError('')}>
+              {assignmentError}
+            </Alert>
+          )}
           {loadingRiders ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={40} />
@@ -788,6 +808,11 @@ export default function AdminRequestDetailsPage() {
       <Dialog open={deliveryRiderDialogOpen} onClose={() => setDeliveryRiderDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>Select Delivery Rider</DialogTitle>
         <DialogContent>
+          {assignmentError && (
+            <Alert severity='error' sx={{ mb: 2 }} onClose={() => setAssignmentError('')}>
+              {assignmentError}
+            </Alert>
+          )}
           {loadingRiders ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={40} />
