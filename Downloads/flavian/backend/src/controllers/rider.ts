@@ -49,9 +49,9 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
         }
 
         if (request.riderAssignmentStage === 'DELIVERY') {
-            const allowedDelivery = new Set(['IN_TRANSIT', 'DELIVERING', 'COMPLETED']);
+            const allowedDelivery = new Set(['IN_TRANSIT', 'DELIVERING', 'DELIVERED', 'COMPLETED']);
             if (!allowedDelivery.has(status)) {
-                return res.status(400).json({ error: 'Delivery rider can only set IN_TRANSIT, DELIVERING or COMPLETED' });
+                return res.status(400).json({ error: 'Delivery rider can only set IN_TRANSIT, DELIVERING, DELIVERED or COMPLETED' });
             }
         }
 
