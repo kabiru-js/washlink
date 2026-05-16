@@ -1,10 +1,11 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from './index';
 import { prisma } from '../utils/db';
+import { createAndEmitNotification } from '../utils/notifications';
 type RequestStatus = string;
 
 const vendorAllowedStatuses = new Set(['RECEIVED', 'PROCESSING', 'READY']);
-const deliveryAllowedStatuses = new Set(['IN_TRANSIT', 'DELIVERING', 'COMPLETED']);
+const deliveryAllowedStatuses = new Set(['IN_TRANSIT', 'DELIVERING', 'DELIVERED', 'COMPLETED']);
 
 export const registerOrderHandlers = (io: Server, socket: AuthenticatedSocket) => {
     // Only vendors (or maybe customers cancelling) should update order status
@@ -37,7 +38,7 @@ export const registerOrderHandlers = (io: Server, socket: AuthenticatedSocket) =
                     return socket.emit('error', { message: 'Pickup rider can only set PICKED_UP' });
                 }
                 if (request.riderAssignmentStage === 'DELIVERY' && !deliveryAllowedStatuses.has(status)) {
-                    return socket.emit('error', { message: 'Delivery rider can only set IN_TRANSIT, DELIVERING or COMPLETED' });
+                    return socket.emit('error', { message: 'Delivery rider can only set IN_TRANSIT, DELIVERING, DELIVERED or COMPLETED' });
                 }
             }
 
@@ -50,12 +51,13 @@ export const registerOrderHandlers = (io: Server, socket: AuthenticatedSocket) =
             // Broadcast order update to the chat room
             io.to(`request_${requestId}`).emit('order_status_updated', updatedRequest);
 
-            // Notify the customer directly
-            io.to(`user_${updatedRequest.customerId}`).emit('notification', {
+            await createAndEmitNotification(io, {
+                userId: updatedRequest.customerId,
                 type: 'ORDER_STATUS_UPDATE',
+                title: 'Order Status Updated',
                 message: `Your order status was updated to ${status}`,
                 requestId,
-                data: updatedRequest,
+                data: { status },
             });
 
         } catch (error) {

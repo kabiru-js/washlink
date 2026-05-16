@@ -4,6 +4,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 import { ThemeRegistry } from '@/components/ThemeRegistry';
 import { SnackbarProvider } from '@/context/SnackbarContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+import NotificationBell from '@/components/NotificationBell';
 
 export const metadata: Metadata = {
     title: 'WashLink',
@@ -22,7 +24,10 @@ export default function RootLayout({
                     <SnackbarProvider>
                         <AuthProvider>
                             <SocketProvider>
-                                {children}
+                                <NotificationProvider>
+                                    <NotificationBell />
+                                    {children}
+                                </NotificationProvider>
                             </SocketProvider>
                         </AuthProvider>
                     </SnackbarProvider>

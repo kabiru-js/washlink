@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../utils/db';
+import { createAndEmitNotification } from '../utils/notifications';
 
 export const getAssignedRequests = async (req: AuthRequest, res: Response) => {
     try {
@@ -26,6 +27,7 @@ export const getAssignedRequests = async (req: AuthRequest, res: Response) => {
 
 export const updateStatus = async (req: AuthRequest, res: Response) => {
     try {
+        const io = (req.app as any).get('io');
         const userId = req.user!.userId;
         const { requestId } = req.params;
         const { status } = req.body; 
@@ -57,6 +59,15 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
 
         const updatedRequest = await prisma.laundryRequest.update({
             where: { id: requestId },
+            data: { status },
+        });
+
+        await createAndEmitNotification(io, {
+            userId: updatedRequest.customerId,
+            type: 'ORDER_STATUS_UPDATE',
+            title: 'Order Status Updated',
+            message: `Your order status is now ${status}`,
+            requestId,
             data: { status },
         });
 

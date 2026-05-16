@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { prisma } from '../utils/db';
 import { haversineKm } from '../utils/geo';
+import { createAndEmitNotification } from '../utils/notifications';
 
 const operationalStatuses = new Set([
   'ACCEPTED',
@@ -74,6 +75,7 @@ export const updateRequestStatusByAdmin = async (
   res: Response,
 ) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
     const { status } = (req as any).body as { status?: string };
 
@@ -96,6 +98,15 @@ export const updateRequestStatusByAdmin = async (
 
     const updated = await prisma.laundryRequest.update({
       where: { id: requestId },
+      data: { status },
+    });
+
+    await createAndEmitNotification(io, {
+      userId: updated.customerId,
+      type: 'ORDER_STATUS_UPDATE',
+      title: 'Order Status Updated',
+      message: `Admin updated your order status to ${status}`,
+      requestId,
       data: { status },
     });
 
@@ -157,6 +168,7 @@ export const getRequestDetails = async (req: AuthRequest, res: Response) => {
 
 export const confirmRequestPayment = async (req: AuthRequest, res: Response) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
     const adminId = req.user!.userId;
 
@@ -182,6 +194,14 @@ export const confirmRequestPayment = async (req: AuthRequest, res: Response) => 
       },
     });
 
+    await createAndEmitNotification(io, {
+      userId: updated.customerId,
+      type: 'PAYMENT_CONFIRMED',
+      title: 'Payment Confirmed',
+      message: 'Your payment has been confirmed by admin.',
+      requestId,
+    });
+
     res.json(updated);
   } catch (error) {
     console.error(error);
@@ -191,6 +211,7 @@ export const confirmRequestPayment = async (req: AuthRequest, res: Response) => 
 
 export const assignNearestVendor = async (req: AuthRequest, res: Response) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
 
     const request = await prisma.laundryRequest.findUnique({ where: { id: requestId } });
@@ -242,6 +263,23 @@ export const assignNearestVendor = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'VENDOR_ASSIGNED',
+        title: 'Vendor Assigned',
+        message: `${best.vendor.user.name} has been assigned to your request.`,
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: best.vendor.userId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Laundry Assignment',
+        message: 'You have been assigned a new request.',
+        requestId,
+      }),
+    ]);
+
     res.json({
       request: updated,
       assignedVendor: {
@@ -263,6 +301,7 @@ export const assignNearestRiderForPickup = async (
   res: Response,
 ) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
 
     const request = await prisma.laundryRequest.findUnique({ where: { id: requestId } });
@@ -313,6 +352,23 @@ export const assignNearestRiderForPickup = async (
       },
     });
 
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'RIDER_ASSIGNED',
+        title: 'Pickup Rider Assigned',
+        message: 'A pickup rider has been assigned to your order.',
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: best.rider.userId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Pickup Assignment',
+        message: 'You have been assigned a pickup request.',
+        requestId,
+      }),
+    ]);
+
     res.json({ request: updated, assignedRider: best.rider, distanceKm: best.distanceKm });
   } catch (error) {
     console.error(error);
@@ -325,6 +381,7 @@ export const assignNearestRiderForDelivery = async (
   res: Response,
 ) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
 
     const request = await prisma.laundryRequest.findUnique({ where: { id: requestId } });
@@ -373,6 +430,23 @@ export const assignNearestRiderForDelivery = async (
         deliveryRiderAssignedAt: new Date(),
       },
     });
+
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'RIDER_ASSIGNED',
+        title: 'Delivery Rider Assigned',
+        message: 'A delivery rider has been assigned to your order.',
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: best.rider.userId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Delivery Assignment',
+        message: 'You have been assigned a delivery request.',
+        requestId,
+      }),
+    ]);
 
     res.json({ request: updated, assignedRider: best.rider, distanceKm: best.distanceKm });
   } catch (error) {
@@ -432,6 +506,7 @@ export const getAvailableVendors = async (req: AuthRequest, res: Response) => {
 
 export const assignManualVendor = async (req: AuthRequest, res: Response) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
     const { vendorUserId } = (req as any).body as { vendorUserId?: string };
 
@@ -476,6 +551,23 @@ export const assignManualVendor = async (req: AuthRequest, res: Response) => {
         vendorAssignedAt: new Date(),
       },
     });
+
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'VENDOR_ASSIGNED',
+        title: 'Vendor Assigned',
+        message: `${vendor.user.name} has been assigned to your request.`,
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: vendorUserId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Laundry Assignment',
+        message: 'You have been assigned a new request.',
+        requestId,
+      }),
+    ]);
 
     res.json({
       request: updated,
@@ -547,6 +639,7 @@ export const getAvailableRiders = async (req: AuthRequest, res: Response) => {
 
 export const assignManualRiderForPickup = async (req: AuthRequest, res: Response) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
     const { riderUserId } = (req as any).body as { riderUserId?: string };
 
@@ -591,6 +684,23 @@ export const assignManualRiderForPickup = async (req: AuthRequest, res: Response
       },
     });
 
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'RIDER_ASSIGNED',
+        title: 'Pickup Rider Assigned',
+        message: 'A pickup rider has been assigned to your order.',
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: rider.userId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Pickup Assignment',
+        message: 'You have been assigned a pickup request.',
+        requestId,
+      }),
+    ]);
+
     res.json({
       request: updated,
       assignedRider: {
@@ -609,6 +719,7 @@ export const assignManualRiderForPickup = async (req: AuthRequest, res: Response
 
 export const assignManualRiderForDelivery = async (req: AuthRequest, res: Response) => {
   try {
+    const io = (req.app as any).get('io');
     const requestId = (req as any).params.requestId as string;
     const { riderUserId } = (req as any).body as { riderUserId?: string };
 
@@ -654,6 +765,23 @@ export const assignManualRiderForDelivery = async (req: AuthRequest, res: Respon
         deliveryRiderAssignedAt: new Date(),
       },
     });
+
+    await Promise.all([
+      createAndEmitNotification(io, {
+        userId: updated.customerId,
+        type: 'RIDER_ASSIGNED',
+        title: 'Delivery Rider Assigned',
+        message: 'A delivery rider has been assigned to your order.',
+        requestId,
+      }),
+      createAndEmitNotification(io, {
+        userId: rider.userId,
+        type: 'NEW_ASSIGNMENT',
+        title: 'New Delivery Assignment',
+        message: 'You have been assigned a delivery request.',
+        requestId,
+      }),
+    ]);
 
     res.json({
       request: updated,
