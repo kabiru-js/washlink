@@ -5,7 +5,7 @@ import cloudinary from '../utils/cloudinary';
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'washlink_uploads',
+    folder: 'laundrybolt_uploads',
     allowed_formats: ['jpg', 'png', 'jpeg'],
   } as any,
 });

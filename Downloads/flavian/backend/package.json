@@ -1,7 +1,7 @@
 {
-  "name": "washlink-backend",
+  "name": "laundry-bolt-backend",
   "version": "1.0.0",
-  "description": "WashLink backend MVP",
+  "description": "Laundry Bolt backend MVP",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",

@@ -18,7 +18,7 @@ export const ensureAdminAccount = async () => {
         return;
     }
 
-    const adminName = process.env.ADMIN_NAME || 'WashLink Admin';
+    const adminName = process.env.ADMIN_NAME || 'Laundry Bolt Admin';
     const adminPhone = process.env.ADMIN_PHONE || null;
 
     const passwordHash = await bcrypt.hash(adminPassword, 10);

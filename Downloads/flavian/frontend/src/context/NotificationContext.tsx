@@ -45,7 +45,7 @@ export const NotificationProvider = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const storageKey = user?.id ? `washlink_notifications_${user.id}` : '';
+  const storageKey = user?.id ? `laundrybolt_notifications_${user.id}` : '';
 
   const readFromStorage = useCallback(() => {
     if (!storageKey || typeof window === 'undefined') {

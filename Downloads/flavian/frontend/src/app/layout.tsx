@@ -8,7 +8,7 @@ import { NotificationProvider } from '@/context/NotificationContext';
 import NotificationBell from '@/components/NotificationBell';
 
 export const metadata: Metadata = {
-    title: 'WashLink',
+    title: 'Laundry Bolt',
     description: 'Uber for Laundry',
 };
 

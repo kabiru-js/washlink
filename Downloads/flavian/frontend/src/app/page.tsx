@@ -46,7 +46,7 @@ export default function LandingPage() {
         alignItems: 'center'
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.5rem', cursor: 'pointer' }} onClick={() => router.push('/')}>
-          WashLink
+          Laundry Bolt
         </Typography>
         <Box component="nav" sx={{ display: { xs: 'none', md: 'flex' }, gap: 4, alignItems: 'center' }}>
           {['Features', 'How it Works', 'About'].map((item) => (
@@ -166,7 +166,7 @@ export default function LandingPage() {
           overflow: 'hidden'
         }}>
           {/* We can use the previously generated image path if available, or stay with the stylish gradient */}
-          <Typography variant="h2" sx={{ opacity: 0.1, fontWeight: 800 }}>WashLink</Typography>
+          <Typography variant="h2" sx={{ opacity: 0.1, fontWeight: 800 }}>Laundry Bolt</Typography>
         </Box>
       </Box>
 
@@ -178,7 +178,7 @@ export default function LandingPage() {
           textAlign: 'center',
           mb: 8
         }}>
-          Why choose WashLink
+          Why choose Laundry Bolt
         </Typography>
         
         <Grid container spacing={6} sx={{ maxWidth: 1200, mx: 'auto' }}>
@@ -229,7 +229,7 @@ export default function LandingPage() {
           textAlign: 'center',
           mb: 2
         }}>
-          How WashLink Works
+          How Laundry Bolt Works
         </Typography>
         <Typography variant="subtitle1" sx={{ 
           textAlign: 'center', 
@@ -277,7 +277,7 @@ export default function LandingPage() {
           Ready to simplify your laundry?
         </Typography>
         <Typography sx={{ maxWidth: 600, mx: 'auto', mb: 5, fontSize: '1.1rem', opacity: 0.9 }}>
-          Join thousands of busy professionals who trust WashLink with their laundry. Start your first order today.
+          Join thousands of busy professionals who trust Laundry Bolt with their laundry. Start your first order today.
         </Typography>
         <Button 
           variant="contained" 
@@ -300,9 +300,9 @@ export default function LandingPage() {
 
       {/* 6. Footer */}
       <Box component="footer" sx={{ bgcolor: colors.dark, color: '#999', py: 6, px: '5%', textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>WashLink</Typography>
+        <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 600 }}>Laundry Bolt</Typography>
         <Typography variant="body2" sx={{ mb: 3 }}>
-          &copy; 2024 WashLink. All rights reserved.
+          &copy; 2024 Laundry Bolt. All rights reserved.
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
           {['Privacy', 'Terms', 'Contact'].map(link => (

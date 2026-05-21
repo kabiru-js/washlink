@@ -34,7 +34,7 @@ export default function LoginPage() {
         <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
             <Card sx={{ maxWidth: 400, width: '100%', p: 4 }}>
                 <Typography variant="h4" fontWeight="bold" align="center" mb={3}>
-                    WashLink
+                    Laundry Bolt
                 </Typography>
                 <Typography variant="body1" align="center" color="text.secondary" mb={4}>
                     Sign in to your account

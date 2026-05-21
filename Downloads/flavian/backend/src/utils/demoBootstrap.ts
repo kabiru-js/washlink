@@ -32,27 +32,27 @@ export const ensureDemoData = async () => {
   if (!shouldSeed) return;
 
   const admin = await upsertUser(
-    'admin@washlink.local',
-    'WashLink Admin',
+    'admin@laundrybolt.local',
+    'Laundry Bolt Admin',
     'ADMIN',
     'ChangeMe123!',
   );
   const customer = await upsertUser(
-    'customer@washlink.local',
+    'customer@laundrybolt.local',
     'Demo Customer',
     'CUSTOMER',
     'Customer123!',
     '+1-555-0001',
   );
   const vendor = await upsertUser(
-    'vendor@washlink.local',
+    'vendor@laundrybolt.local',
     'Demo Vendor',
     'VENDOR',
     'Vendor123!',
     '+1-555-0002',
   );
   const rider = await upsertUser(
-    'rider@washlink.local',
+    'rider@laundrybolt.local',
     'Demo Rider',
     'RIDER',
     'Rider123!',

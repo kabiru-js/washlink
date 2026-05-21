@@ -84,7 +84,7 @@ function RegisterPageContent() {
         }}
       >
         <Typography variant='h4' fontWeight='bold' align='center' mb={1}>
-          WashLink
+          Laundry Bolt
         </Typography>
         <Typography
           variant='body1'
